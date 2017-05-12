@@ -53,8 +53,8 @@ if __name__ == "__main__":
                        "Start frame when reading frame features.")
   flags.DEFINE_bool(
       "augment_input", False,
-      "If set, then input features will be augmented, and read_frame_skip / "
-      "read_start_frame will be overriden.")
+      "If set, then input features will be augmented, i.e. read_start_frame "
+      "will be randomly selected from 0 to frame_skip")
 
   # Model flags.
   flags.DEFINE_bool(
@@ -574,7 +574,8 @@ def get_reader():
   if FLAGS.frame_features:
     reader = readers.YT8MFrameFeatureReader(
         feature_names=feature_names, feature_sizes=feature_sizes,
-        frame_skip=FLAGS.read_frame_skip, start_frame=FLAGS.read_start_frame)
+        frame_skip=FLAGS.read_frame_skip, start_frame=FLAGS.read_start_frame,
+        augment=FLAGS.augment_input)
   else:
     reader = readers.YT8MAggregatedFeatureReader(
         feature_names=feature_names, feature_sizes=feature_sizes)

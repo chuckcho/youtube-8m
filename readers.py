@@ -144,6 +144,7 @@ class YT8MFrameFeatureReader(BaseReader):
                max_frames=360,
                frame_skip=1,
                start_frame=0,
+               augment=False
                ):
     """Construct a YT8MFrameFeatureReader.
 
@@ -154,6 +155,7 @@ class YT8MFrameFeatureReader(BaseReader):
       max_frames: the maximum number of frames to process.
       frame_skip: if positive, number of frames to skip when reading
       start_frame: start frame number for reading
+      augment (bool): whether to augment input features
     """
 
     assert len(feature_names) == len(feature_sizes), \
@@ -166,6 +168,7 @@ class YT8MFrameFeatureReader(BaseReader):
     self.max_frames = max_frames
     self.frame_skip = frame_skip
     self.start_frame = start_frame
+    self.augment = augment
 
   def get_video_matrix(self,
                        features,
@@ -174,7 +177,8 @@ class YT8MFrameFeatureReader(BaseReader):
                        max_quantized_value,
                        min_quantized_value,
                        frame_skip,
-                       start_frame):
+                       start_frame,
+                       augment):
     """Decodes features from an input string and quantizes it.
 
     Args:
@@ -185,6 +189,7 @@ class YT8MFrameFeatureReader(BaseReader):
       min_quantized_value: the minimum of the quantized value.
       frame_skip: if positive, number of frames to skip
       start_frame: start frame number for reading
+      augment (bool): whether to augment input features
 
     Returns:
       feature_matrix: matrix of all frame-features
@@ -193,6 +198,10 @@ class YT8MFrameFeatureReader(BaseReader):
     decoded_features = tf.reshape(
         tf.cast(tf.decode_raw(features, tf.uint8), tf.float32),
         [-1, feature_size])
+
+    if augment and frame_skip > 0:
+        import numpy
+        start_frame = numpy.random.randint(frame_skip + 1)
     if start_frame > 0:
         decoded_features = decoded_features[start_frame:, :]
     if frame_skip > 0:
@@ -263,6 +272,7 @@ class YT8MFrameFeatureReader(BaseReader):
           min_quantized_value,
           self.frame_skip,
           self.start_frame,
+          self.augment,
           )
       if num_frames == -1:
         num_frames = num_frames_in_this_feature
