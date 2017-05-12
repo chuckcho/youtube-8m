@@ -193,8 +193,10 @@ class YT8MFrameFeatureReader(BaseReader):
     decoded_features = tf.reshape(
         tf.cast(tf.decode_raw(features, tf.uint8), tf.float32),
         [-1, feature_size])
+    if start_frame > 0:
+        decoded_features = decoded_features[start_frame:, :]
     if frame_skip > 0:
-        decoded_features = decoded_features[start_frame::(frame_skip+1), :]
+        decoded_features = decoded_features[::(frame_skip+1), :]
 
     num_frames = tf.minimum(tf.shape(decoded_features)[0], max_frames)
     feature_matrix = utils.Dequantize(decoded_features,
