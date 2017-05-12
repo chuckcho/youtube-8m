@@ -35,6 +35,7 @@ if __name__ == "__main__":
                       "The directory to load the model files from. "
                       "The tensorboard metrics files are also saved to this "
                       "directory.")
+  flags.DEFINE_integer("checkpoint_step", 0, "step for checkpoint to use.")
   flags.DEFINE_string(
       "eval_data_pattern", "",
       "File glob defining the evaluation dataset in tensorflow.SequenceExample "
@@ -190,7 +191,12 @@ def evaluation_loop(video_id_batch, prediction_batch, label_batch, loss,
 
   global_step_val = -1
   with tf.Session() as sess:
-    latest_checkpoint = tf.train.latest_checkpoint(FLAGS.train_dir)
+    if FLAGS.checkpoint_step:
+      import os
+      latest_checkpoint = os.path.join(FLAGS.train_dir, "model.ckpt-{}".format(
+        FLAGS.checkpoint_step))
+    else:
+      latest_checkpoint = tf.train.latest_checkpoint(FLAGS.train_dir)
     if latest_checkpoint:
       logging.info("Loading checkpoint for eval: " + latest_checkpoint)
       # Restores from checkpoint
