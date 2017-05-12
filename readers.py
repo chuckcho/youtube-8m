@@ -142,7 +142,10 @@ class YT8MFrameFeatureReader(BaseReader):
                num_classes=4716,
                feature_sizes=[1024],
                feature_names=["inc3"],
-               max_frames=300):
+               max_frames=360,
+               frame_skip=1,
+               start_frame=0,
+               ):
     """Construct a YT8MFrameFeatureReader.
 
     Args:
@@ -150,6 +153,8 @@ class YT8MFrameFeatureReader(BaseReader):
       feature_sizes: positive integer(s) for the feature dimensions as a list.
       feature_names: the feature name(s) in the tensorflow record as a list.
       max_frames: the maximum number of frames to process.
+      frame_skip: if positive, number of frames to skip when reading
+      start_frame: start frame number for reading
     """
 
     assert len(feature_names) == len(feature_sizes), \
@@ -160,13 +165,17 @@ class YT8MFrameFeatureReader(BaseReader):
     self.feature_sizes = feature_sizes
     self.feature_names = feature_names
     self.max_frames = max_frames
+    self.frame_skip = frame_skip
+    self.start_frame = start_frame
 
   def get_video_matrix(self,
                        features,
                        feature_size,
                        max_frames,
                        max_quantized_value,
-                       min_quantized_value):
+                       min_quantized_value,
+                       frame_skip,
+                       start_frame):
     """Decodes features from an input string and quantizes it.
 
     Args:
@@ -175,6 +184,8 @@ class YT8MFrameFeatureReader(BaseReader):
       max_frames: number of frames (rows) in the output feature_matrix
       max_quantized_value: the maximum of the quantized value.
       min_quantized_value: the minimum of the quantized value.
+      frame_skip: if positive, number of frames to skip
+      start_frame: start frame number for reading
 
     Returns:
       feature_matrix: matrix of all frame-features
@@ -183,6 +194,8 @@ class YT8MFrameFeatureReader(BaseReader):
     decoded_features = tf.reshape(
         tf.cast(tf.decode_raw(features, tf.uint8), tf.float32),
         [-1, feature_size])
+    if frame_skip > 0:
+        decoded_features = decoded_features[start_frame::(frame_skip+1), :]
 
     num_frames = tf.minimum(tf.shape(decoded_features)[0], max_frames)
     feature_matrix = utils.Dequantize(decoded_features,
@@ -246,7 +259,10 @@ class YT8MFrameFeatureReader(BaseReader):
           self.feature_sizes[feature_index],
           self.max_frames,
           max_quantized_value,
-          min_quantized_value)
+          min_quantized_value,
+          self.frame_skip,
+          self.start_frame,
+          )
       if num_frames == -1:
         num_frames = num_frames_in_this_feature
       else:

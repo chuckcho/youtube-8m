@@ -46,6 +46,14 @@ if __name__ == "__main__":
   flags.DEFINE_string("feature_names", "mean_rgb", "Name of the feature "
                       "to use for training.")
   flags.DEFINE_string("feature_sizes", "1024", "Length of the feature vectors.")
+  flags.DEFINE_integer("read_frame_skip", 0,
+                       "How many frames to skip when reading frame features.")
+  flags.DEFINE_integer("read_start_frame", 0,
+                       "Start frame when reading frame features.")
+  flags.DEFINE_bool(
+      "augment_input", False,
+      "If set, then input features will be augmented, and read_frame_skip / "
+      "read_start_frame will be overriden.")
 
   # Model flags.
   flags.DEFINE_bool(
@@ -533,7 +541,8 @@ def get_reader():
 
   if FLAGS.frame_features:
     reader = readers.YT8MFrameFeatureReader(
-        feature_names=feature_names, feature_sizes=feature_sizes)
+        feature_names=feature_names, feature_sizes=feature_sizes,
+        frame_skip=FLAGS.frame_skip, start_frame=FLAGS.start_frame)
   else:
     reader = readers.YT8MAggregatedFeatureReader(
         feature_names=feature_names, feature_sizes=feature_sizes)
