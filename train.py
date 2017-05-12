@@ -574,7 +574,7 @@ def get_reader():
   if FLAGS.frame_features:
     reader = readers.YT8MFrameFeatureReader(
         feature_names=feature_names, feature_sizes=feature_sizes,
-        frame_skip=FLAGS.frame_skip, start_frame=FLAGS.start_frame)
+        frame_skip=FLAGS.read_frame_skip, start_frame=FLAGS.read_start_frame)
   else:
     reader = readers.YT8MAggregatedFeatureReader(
         feature_names=feature_names, feature_sizes=feature_sizes)
