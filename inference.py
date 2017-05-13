@@ -37,6 +37,7 @@ if __name__ == '__main__':
                       "The directory to load the model files from.")
   flags.DEFINE_string("output_file", "",
                       "The file to save the predictions to.")
+  flags.DEFINE_integer("checkpoint_step", 0, "step for checkpoint to use.")
   flags.DEFINE_string(
       "input_data_pattern", "",
       "File glob defining the evaluation dataset in tensorflow.SequenceExample "
@@ -110,10 +111,15 @@ def get_input_data_tensors(reader, data_pattern, batch_size, num_readers=1):
                             enqueue_many=True))
     return video_id_batch, video_batch, num_frames_batch
 
-def inference(reader, train_dir, data_pattern, out_file_location, batch_size, top_k):
+def inference(reader, train_dir, data_pattern, out_file_location, batch_size, top_k, checkpoint_step):
   with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess, gfile.Open(out_file_location, "w+") as out_file:
     video_id_batch, video_batch, num_frames_batch = get_input_data_tensors(reader, data_pattern, batch_size)
-    latest_checkpoint = tf.train.latest_checkpoint(train_dir)
+    if checkpoint_step:
+      import os
+      latest_checkpoint = os.path.join(FLAGS.train_dir, "model.ckpt-{}".format(
+        checkpoint_step))
+    else:
+      latest_checkpoint = tf.train.latest_checkpoint(train_dir)
     if latest_checkpoint is None:
       raise Exception("unable to find a checkpoint at location: %s" % train_dir)
     else:
@@ -190,7 +196,7 @@ def main(unused_argv):
       "Unable to continue with inference.")
 
   inference(reader, FLAGS.train_dir, FLAGS.input_data_pattern,
-    FLAGS.output_file, FLAGS.batch_size, FLAGS.top_k)
+    FLAGS.output_file, FLAGS.batch_size, FLAGS.top_k, FLAGS.checkpoint_step)
 
 
 if __name__ == "__main__":
